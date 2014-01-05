@@ -48,8 +48,6 @@ while (1==1){
 	if ($sudden_mode==1){
 		echo "\r\n### MANUAL SUDDEN ###\r\n";
 	}
-	if ($fake==false) sleep($interval);
-	if ($paper==true) sleep($interval);
 	$infodata=get_infodataf($fake); $info=get_infodata($infodata,$fake);
 
 	$dt=date("Y-m-d H:i:s");
@@ -57,43 +55,38 @@ while (1==1){
 	$ticker=get_tickerf($fake); $ticker=get_ticker($ticker,$fake);
 	$vol=$ticker["ticker_vol"];
 	if ($fake==true and $paper==false) $dt=$ticker["datetime"];
-	if (isset($ema)) unset($ema);
+	
+	//if (isset($ema)) unset($ema);
 	if ($emacross==true) { 
-		if (!isset($lastema)) $lastema=false;
-		$lastema=emarket_direction($emacross,$lastema); 
+		$lastema=emarket_direction(); 
 		echo "\r\n*** EMAShort".$lastema["short"];
 		echo " / EMALong".$lastema["long"]."";
-		if (($lastema["short"]>$lastema["long"]) and ($lastema["short"]-$lastema["long"])>$emaDiff) {
-			$ema="up";
+		if ($lastema["short"]>$lastema["long"]) {
+			if (($lastema["short"]-$lastema["long"])>$emaDiff){
+				$ema="up";
+			}else{
+				$ema="up.limbo";
+			}
 		}else{
-			if ($lastema["long"]-$lastema["short"]>$emaDiff){
+			if (($lastema["long"]-$lastema["short"])>$emaDiff){
 				$ema="down";
 			}else{
-				$ema="up";
+				$ema="down.limbo";
 			}
 		}
-		if ($lastema["short"]==null or $lastema["long"]==null){
+		if ($lastema==false){
 			$ema="limbo";
 		}
 	}
-	if ($emacross==true and !isset($ema)) {
-		$ema="limbo";
-	}
-	
-	/*if (!isset($lastema)){ 
-		$lastema["short"]=false;
-		$lastema["long"]=false;
-		$ema="limbo";
-	}
-	$error=false;
-	if ($ema=="limbo") {
-		$error=true;
-	}
-	if ($error==true and $fake==true) $error=false;
-	var_dump($error);*/
+	//echo $ema;
+	//die;
+	//if ($emacross==true and !isset($ema)) {
+	//	$ema="limbo";
+	//}
 
 	$line=$dt.",,".$ticker["ticker_last"].",,,$vol,".$lastema["short"].",".$lastema["long"].",\r\n";
 	$F1=file($datachart);
+	//echo $ticker["ticker_last"];
 	$hora=end($F1); $hora=explode(",",$hora);
  	$times=date('i', strtotime($hora[0]));
  	$hora_old=$times;
@@ -226,6 +219,8 @@ while (1==1){
 			}
 		}
 	}
+	if ($fake==false) sleep($interval);
+	if ($paper==true) sleep($interval);
 }
 
 

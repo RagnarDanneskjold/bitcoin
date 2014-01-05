@@ -61,63 +61,62 @@ function vol_anormal($last_minutes){
 	return false;
 }
 
-function emarket_direction($emacross=false,$lastema=false){
+function lastnprices($arra,$nval){
+	$lastn = array_slice($arra, -$nval); 
+	$c=0;
+	foreach ($lastn as $value){
+		$value=explode(",",$value);
+		if (strlen($value[2])>=2){
+			$value=$value[2];
+			$value=round($value,2);
+			$values[$c]["cur"]=$value;
+			//$values[$c]["emaShort"]=$value;
+		}
+		if (strlen($value[6])>=2){
+			$value=$value[6];
+			$value=round($value,2);
+			$values[$c]["emaShort"]=$value;
+		}
+		if (strlen($value[7])>=2){		
+			$value=$value[7];
+			$value=round($value,2);
+			$values[$c]["emaShort"]=$value;
+		}
+		$c++;
+	}
+	return $values;
+}
+
+function emarket_direction(){
 	global $datachart;
 	global $dire_limbo;
-	$F1=file($datachart);
-	$total=(count($F1)-1);
-
 	global $emaShort;
 	global $emaLong;
-	$emaSbuffer=$emaShort;
-	$emaLbuffer=$emaLong;
-	//if ($total<$emaShort) $emaShort=2;
-	//if ($total<$emaLong) $emaLong=5;
-	if ($emacross and $total>=$emaShort){
-		$c=0;
-		while ($c<=$emaShort){
-			if (isset($F1[($total-$c)])){
-				$valu=$F1[($total-$c)];
-				$valu=explode(",",$valu);
-				$valu=$valu[2];
-				$values[]=round($valu,2);
-			}
-			$c++;
+	
+	$F1=file($datachart);
+	$total=(count($F1)-1);
+	
+	if ($total>=$emaLong){
+	
+		$emaValues=lastnprices($F1,$emaShort);
+		$lastValue=end($emaValues);
+		foreach ($emaValues as $value){
+			$prices[]=$value["cur"];
 		}
-		$values=array_reverse($values);
-		if (count($values)>=$emaShort){
-			if ($lastema["short"]==false) $lastema["short"]=intrd_ma($values,$emaShort);
-		 	$emaShortValue=intrd_ema(end($values),$lastema["short"],$emaShort);
-		 	$lastemas["short"]=round($emaShortValue,2);
-		 	if (!isset($lastemas["long"])){
-		 		$lastemas["long"]=false;
-		 	}
-	 	}
-	}
-	if ($emacross and $total>=$emaLong){
-		$c=0;
-		while ($c<=$emaLong){
-			if (isset($F1[($total-$c)])){
-				$valu=$F1[($total-$c)];
-				$valu=explode(",",$valu);
-				$valu=$valu[2];
-				$values[]=$valu;
-			}
-			$c++;
+		if (!isset($lastValue["emaShort"])) $lastValue["emaShort"]=intrd_ma($prices,$emaShort);
+		$ema["short"]=round(intrd_ema($lastValue["cur"],$lastValue["emaShort"],$emaShort),2);
+		
+		$emaValues=lastnprices($F1,$emaLong);
+		$lastValue=end($emaValues);
+		foreach ($emaValues as $value){
+			$prices[]=$value["cur"];
 		}
-		$values=array_reverse($values);
-		if (count($values)>=$emaLong){
-			if ($lastema["long"]==false) $lastema["long"]=intrd_ma($values,$emaLong);
-		 	$emaLongValue=intrd_ema(end($values),$lastema["long"],$emaLong);
-		 	$lastemas["long"]=round($emaLongValue,2);
-		 	if (!isset($lastemas["short"])){
-		 		$lastemas["short"]=false;
-		 	}
-	 	}
+		if (!isset($lastValue["emaLong"])) $lastValue["emaLong"]=intrd_ma($prices,$emaLong);
+		$ema["long"]=round(intrd_ema($lastValue["cur"],$lastValue["emaLong"],$emaLong),2);
+		
 	}
-	$emaShort=$emaSbuffer;
-	$emaLong=$emaLbuffer;
-	if (isset($lastemas)) return $lastemas;
+	if (isset($ema)) { return $ema; } else { return false; }
+	
 }
 
 function market_direction($last_minutes,$limbo=false,$ema=false){
@@ -298,13 +297,20 @@ function get_lasttrade_local($pen=false){
 }
 
 function intrd_ma($prices,$periods){
-	 	$maBuffer = array_slice($prices, -$periods);
+		$maBuffer = array_slice($prices, -$periods);
 	 	$ma=(array_sum($maBuffer)/$periods);
 	 	return $ma;
 }
 
 function intrd_ema($curr_price,$lastema,$periods){
-	$ema= ( ($curr_price * (2/(1+$periods))) + ( $lastema*(1-(2/(1+$periods))) ) );
+	//EMA = Price(t) * k + EMA(y) * (1 – k)
+	//t = current period, y = last period, N = number of periods, k = 2/(N+1)
+	$t=$curr_price;
+	$k=(2/(1+$periods));
+	$y=$lastema;
+	$N=$periods;
+	$ema = $t * $k + $y * (1-$k);
+	//$ema= ( ($curr_price * $multi) + ( $lastema*(1-$multi) ) );
 	if ($ema==false or $ema=="") $ema=$lastema;
 	return $ema;
 }
@@ -483,14 +489,14 @@ function get_ticker($ticker,$fake=false){
 			//$fake=false;
 		}
 	}
-	$ticker_high=$ticker["data"]["last"]["value"];
+	$ticker_last=$ticker["data"]["last"]["value"];
 	$ticker_high=$ticker["data"]["high"]["value"];
 	$ticker_low=$ticker["data"]["low"]["value"];
 	$ticker_avg=$ticker["data"]["avg"]["value"];
 	$ticker_buy=$ticker["data"]["buy"]["value"];
 	$ticker_sell=$ticker["data"]["sell"]["value"];
 	$ticker_vol=$ticker["data"]["vol"]["value"];
-	$data["ticker_last"]=$ticker_high;
+	$data["ticker_last"]=$ticker_last;
 	$data["ticker_high"]=$ticker_high;
 	$data["ticker_low"]=$ticker_low;
 	$data["ticker_avg"]=$ticker_avg;
