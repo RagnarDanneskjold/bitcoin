@@ -20,6 +20,9 @@ After losing some money on Bitcoin exchanges, I decided to develop my own Tradin
 >Please, do not go to the Live trading before mastering the paper trading.
 >The author of this project and its contributors are not responsible for any losses.
 
+**1-Click-to-run Version (easy install)**
+* Download here: [hal10k_1click.zip](http://dann.com.br/hal10k_1click_apache.php-winx86.zip) w/ apache+php pre-configured, just run the: start_hal10k.bat
+
 ## WEB Control panel & console
 
 ![](http://dann.com.br/web.png)
@@ -126,6 +129,11 @@ This project was developed in the environment described below, so please try to 
    * tmhOAuth for Twitter notifications;  
 
 **Changelog**
+* v2.2 beta 1
+   * - Built-in apache+php pre-configured (1-click-to-run version for Windows)
+   * - Some EMA improvements
+   * - Better graphic chart
+   * - Massive bug fixes
 * v2.1 beta 2
    * - New trading technique implemented: EMA short/long crossover
    * - Paper trading: Differs to Backtesting, its a simulation with Live Tickers but w/ fake money balance.
